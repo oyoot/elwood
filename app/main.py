@@ -22,28 +22,40 @@ def main():
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
     tools = [tool["schema"] for tool in TOOLS.values()]
 
-    chat = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
-        messages=[{"role": "user", "content": args.p}],
-        tools=tools,
-    )
+    messages = [{"role": "user", "content": args.p}]
 
-    if not chat.choices or len(chat.choices) == 0:
-        raise RuntimeError("no choices in response")
+    while True:
 
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    # print("Logs from your program will appear here!", file=sys.stderr)
+        chat = client.chat.completions.create(
+            model="anthropic/claude-haiku-4.5",
+            messages=messages,
+            tools=tools,
+        )
 
-    if chat.choices[0].message.tool_calls:
-        for tool in chat.choices[0].message.tool_calls:
-            tool_name = tool.function.name
-            arguments = json.loads(tool.function.arguments)
-            handler = TOOLS[tool_name]["handler"]
-            result = handler(**arguments)
+        # append response message to messages
+        messages.append(chat.choices[0].message)
 
-            print(result)
-    else:
-        print(chat.choices[0].message.content)
+        if not chat.choices or len(chat.choices) == 0:
+            raise RuntimeError("no choices in response")
+
+        # You can use print statements as follows for debugging, they'll be visible when running tests.
+        # print("Logs from your program will appear here!", file=sys.stderr)
+
+        if chat.choices[0].message.tool_calls:
+            for tool in chat.choices[0].message.tool_calls:
+                tool_name = tool.function.name
+                arguments = json.loads(tool.function.arguments)
+                handler = TOOLS[tool_name]["handler"]
+                result = handler(**arguments)
+
+                messages.append({
+                    "role": "tool",
+                    "content": result,
+                    "tool_call_id": tool.id,
+                })
+        else:
+            print(chat.choices[0].message.content)
+            break
 
 
 if __name__ == "__main__":
