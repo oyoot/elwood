@@ -1,5 +1,8 @@
-from tools.read import READ_TOOL
+from tools.read import READ_TOOL, read_file
 
-TOOLS = [
-    READ_TOOL,
-]
+TOOLS = {
+    "READ": {
+        "schema": READ_TOOL,
+        "handler": read_file
+    }
+}
