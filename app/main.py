@@ -34,15 +34,16 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     # print("Logs from your program will appear here!", file=sys.stderr)
 
-    for tool in chat.choices[0].message.tool_calls:
-        tool_name = tool.function.name
-        arguments = json.loads(tool.function.arguments)
-        handler = TOOLS[tool_name]["handler"]
-        result = handler(**arguments)
+    if chat.choices[0].message.tool_calls:
+        for tool in chat.choices[0].message.tool_calls:
+            tool_name = tool.function.name
+            arguments = json.loads(tool.function.arguments)
+            handler = TOOLS[tool_name]["handler"]
+            result = handler(**arguments)
 
-        print(result)
-
-    # print(chat.choices[0].message.content)
+            print(result)
+    else:
+        print(chat.choices[0].message.content)
 
 
 if __name__ == "__main__":
